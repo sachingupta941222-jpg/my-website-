@@ -304,4 +304,105 @@
     inflationChart.update();
   }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Learn English - Voice Translate</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+     
+    }
+    button {
+      padding: 12px 25px;
+      font-size: 16px;
+      margin: 15px;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+    }
+    
+    #output {
+      margin-top: 25px;
+      font-size: 20px;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0px 3px 6px rgba(0,0,0,0.2);
+      min-width: 300px;
+    }
+    #status {
+      font-size: 16px;
+      margin-top: 10px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>🗣️ Learn English with AI</h1>
+  <button id="startBtn">🎤 Speak in Hindi</button>
+  <p id="status">Click the button and speak...</p>
+  <div id="output">Translation will appear here...</div>
+
+  <script>
+    const startBtn = document.getElementById("startBtn");
+    const status = document.getElementById("status");
+    const output = document.getElementById("output");
+
+    // Check if browser supports SpeechRecognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      status.innerText = "❌ Your browser does not support SpeechRecognition. Use Chrome Desktop.";
+    } else {
+      const recognition = new SpeechRecognition();
+      recognition.lang = "hi-IN"; // Hindi
+      recognition.interimResults = false;
+
+      startBtn.addEventListener("click", () => {
+        recognition.start();
+        status.innerText = "🎙 Listening... please speak in Hindi";
+        output.innerHTML = "Listening...";
+      });
+
+      recognition.onresult = async (event) => {
+        const hindiText = event.results[0][0].transcript;
+        status.innerText = "✅ Voice detected! Translating...";
+        output.innerHTML = `<b>Hindi:</b> ${hindiText}`;
+
+        // Translate using Google Translate unofficial API
+        try {
+          const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=hi&tl=en&dt=t&q=${encodeURIComponent(hindiText)}`);
+          const data = await res.json();
+          const englishText = data[0][0][0];
+
+          output.innerHTML = `<b>Hindi:</b> ${hindiText}<br><b>English:</b> ${englishText}`;
+
+          // Speak the English translation
+          const speech = new SpeechSynthesisUtterance(englishText);
+          speech.lang = "en-US";
+          window.speechSynthesis.speak(speech);
+          status.innerText = "✅ Translation completed!";
+        } catch (err) {
+          status.innerText = "⚠️ Translation failed. Please try again.";
+          console.error(err);
+        }
+      };
+
+      recognition.onspeechend = () => {
+        recognition.stop();
+        status.innerText = "🎤 Stopped listening.";
+      };
+
+      recognition.onerror = (event) => {
+        status.innerText = "❌ Error: " + event.error;
+      };
+    }
+  </script>
+</body>
+</html>
+  
